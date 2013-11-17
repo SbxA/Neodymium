@@ -36,7 +36,6 @@ public class AircooledCondenser {
 	public final static double PrAir = 0.713; // Prandtl number for air flow
 	public final static double muAir = 1.983E-5; // Air dynamic viscosity at 20°C in kg/(m.s)
 	public final static double kAir = 0.0257; // Air thermal conductivity at 20°C in W/(m.K)
-	private TransferUnit node;
 
 	/**
 	 * Fins thermal properties
@@ -49,12 +48,7 @@ public class AircooledCondenser {
 	private double fluidTotalMassFlow, fluidNodeMassFlow;
 	private static double sigma = 1.0; //FIXME
 
-	/**
-	 * Working data arrays
-	 */
-	private double[] airTemperatures;
-	private double[] deltaT;
-	private ThState[] fluidNode;
+
 
 	/**
 	 * Computation parameters
@@ -99,90 +93,42 @@ public class AircooledCondenser {
 		dA = Ao*dx; // Reference exchange area for each node (m^2)
 		nf = np*nt; // Second size of the computation arrays
 
-		airTemperatures = new double[N*(nf+1)]; // In K		
-		deltaT = new double[N*nf]; // In K
-		fluidNode = new ThState[(N+1)*nf];
 
 		this.airTotalMassFlow = airTotalMassFlow; // In kg/s
-		this.airNodeMassFlow = airTotalMassFlow/ntf; // In kg/s
+		this.airNodeMassFlow = airTotalMassFlow/ntf; // In kg/s   ????????????????
 		this.airInletTemperature = airInletTemperature; // In K
-
-		for(int i=0; i < airTemperatures.length; i++){
-			airTemperatures[i] = this.airInletTemperature;
-		}
 
 	}
 
 	public ThState computeOutlet(ThState fluidInletState, double fluidTotalMassFlow){
-		//TODO
+		
 		this.fluidTotalMassFlow = fluidTotalMassFlow;
-		this.fluidNodeMassFlow = fluidTotalMassFlow/nf;
-		ThState finalMixture = new ThState(ThFluid.Water);
+		this.fluidNodeMassFlow = fluidTotalMassFlow/(nt*ntf);
 
-		for(int i=0; i<100; i++){
-			// use unit.airOutletTemperature
-		}
-		return null;
+		NumericalSolver solver=new NumericalSolver(this, fluidInletState, fluidTotalMassFlow);
+    
+		ThState[] statesToMix=solver.computeOutletStateOfEachPipe();
+		
+    ThState outletState = mixSeveralStates(statesToMix);
+		return outletState;
 	}
-
-
-
-	/*
-	 * Utilities
-	 */
-
-	/**
-	 * 
-	 * @param i index of integration node along the tube
-	 * @param j index of tube
-	 * @return air temperature at node (i,j)
-	 */
-	private double getAirTemperature(int i, int j){
-		return airTemperatures[i+nf*j];
-	}
-
-
-	/**
-	 * 
-	 * @param i index of integration node along the tube
-	 * @param j index of tube
-	 * @param temperature air temperature to set un node (i,j)
-	 */
-	private void setAirTemperature(double temperature, int i, int j){
-		airTemperatures[i+nf*j] = temperature;
-	}
-
-
-	/**
-	 * 
-	 * @param i index of integration node along the tube
-	 * @param j index of tube
-	 * @return air temperature difference at node (i,j)
-	 */
-	private double getDeltaT(int i, int j){
-		return deltaT[i+nf*j];
-	}
-
-
-	/**
-	 * 
-	 * @param i index of integration node along the tube
-	 * @param j index of tube
-	 * @param temperature air temperature difference to set un node (i,j)
-	 */
-	private void setDeltaT(double dt, int i, int j){
-		deltaT[i+nf*j] = dt;
-	}
-
-	/**
-	 * 
-	 */
-	private void updateAirTemperatureMap(){
-		for(int j=nf; j>=0; j--){
-			for(int i=0; i<N; i++){
-				setAirTemperature(getAirTemperature(i, j)+getDeltaT(i, j), i, j);
-			}
-		}
-	}
-
+	
+	
+	
+  public ThState mixSeveralStates(ThState[] statesToMix){
+    
+    ThFluid fluid=statesToMix[0].fluid;
+    ThState mixedState =new ThState(fluid);
+    
+    double quality = 0;
+    for(int i=0; i<statesToMix.length ;i++ ){
+      quality=statesToMix[i].quality;
+    }
+    quality=quality/statesToMix.length ;
+        
+    mixedState.setQuality( quality );
+    
+    return mixedState ;
+  }
+  
 }
