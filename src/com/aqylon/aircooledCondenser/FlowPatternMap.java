@@ -6,7 +6,7 @@ public class FlowPatternMap {
     
   }
   
-  public FlowPattern findPattern(){
+  public FlowPattern findPattern(double x, double fluidNodeMassFlow){
     
   //TODO to check by FD
 

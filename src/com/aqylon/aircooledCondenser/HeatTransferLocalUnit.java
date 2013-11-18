@@ -3,7 +3,7 @@ package com.aqylon.aircooledCondenser;
 import com.aqylon.thermodynamics.physics.ThState;
 import com.aqylon.thermodynamics.physics.ThFluid;
 import com.aqylon.utilities.quadraticEquation.quadraticEquation;
-
+import java.util.Hashtable;
 
 /**
  * 
@@ -15,15 +15,15 @@ public class HeatTransferLocalUnit {
 	@SuppressWarnings("unused")
 	private AircooledCondenser condenser;
 
-	private double airNodeOutletDeltaT, fluidNodeMassFlow;
-	private ThState fluidNodeInletState, fluidNodeOutletState ;
+	private double airNodeOutletDeltaT, airNodeInletTemperature, fluidNodeMassFlow;
+	private ThState fluidNodeInletState ;
 
 
 	public double totalTransferCoefficient, enthalpyTransfered, fluidTransferCoefficient, airTransferCoefficient;
 	private double mWavy, mStrat, hLd, epsilon, thetaStrat, A; 
 	private double x ,rhoL, rhoG ,muL , cpL , sigma, kL ;
 
-
+	private FlowPatternMap flowPatternMap ;
 	/*
 	 * Parameters inherited from condenser
 	 */
@@ -37,12 +37,15 @@ public class HeatTransferLocalUnit {
 	 * @param airNodeInletTemperature
 	 * @param fluidNodeInletState
 	 */
-	public HeatTransferLocalUnit(AircooledCondenser condenser, double airNodeInletTemperature, ThState fluidNodeInletState, double fluidNodeMassFlow){
+	public HeatTransferLocalUnit(AircooledCondenser condenser, FlowPatternMap flowPatternMap, double airNodeInletTemperature, ThState fluidNodeInletState, double fluidNodeMassFlow){
 
 		this.fluidNodeInletState = fluidNodeInletState;
 		this.fluidNodeMassFlow = fluidNodeMassFlow;
+		this.airNodeInletTemperature=airNodeInletTemperature;
+		    
 		this.condenser = condenser;
-
+		this.flowPatternMap=flowPatternMap ;
+		
 		dA = condenser.dA;
 		cpAir = AircooledCondenser.cpAir;
 		g = AircooledCondenser.g;
@@ -118,25 +121,26 @@ public class HeatTransferLocalUnit {
 		AL = Math.pow(di, 2)*((2*Math.PI-thetaStrat)-Math.sin(2*Math.PI-thetaStrat))/8; // eq. (8.1.24)
 		this.A = AL/(1-epsilon);
 		
-		FlowPattern pattern = determineFlowPattern();
+		
+		FlowPattern pattern = flowPatternMap.findPattern(x,fluidNodeMassFlow);
 
 		// Compute hio = alfa
 		switch(pattern){
 
 		case AnnularFlow:
-			theta = 0.0;
-			break;
+		  theta = 0.0;
+		  break;
 
 		case StratifiedFlow:
-			theta = thetaStrat*Math.pow((mWavy-fluidNodeMassFlow)/(mWavy-mStrat), 0.5); // eq. (8.1.30)
-			break;
+		  theta = thetaStrat*Math.pow((mWavy-fluidNodeMassFlow)/(mWavy-mStrat), 0.5); // eq. (8.1.30)
+		  break;
 
 		case StratifiedWavyFlow:
-			theta = thetaStrat;
-			break;
+		  theta = thetaStrat;
+		  break;
 
 		default:
-			throw new RuntimeException("Flow pattern not defined. Do no know how to solve this case !!");
+		  throw new RuntimeException("Flow pattern not defined. Do no know how to solve this case !!");
 		}
 
 		
@@ -209,4 +213,9 @@ public class HeatTransferLocalUnit {
 	public double getAirNodeOutletDeltaT(){
 		return airNodeOutletDeltaT;
 	}
+	
+	public Hashtable getMeaningfullFluidProperties(){
+	  
+	}
+	
 }

@@ -28,6 +28,7 @@ public class AircooledCondenser {
 	public double L,W;
 	public int nf, ntf, nt, np;
 
+	
 	/**
 	 * Air flow parameters
 	 */
@@ -53,9 +54,9 @@ public class AircooledCondenser {
 	/**
 	 * Computation parameters
 	 */
-	private int N;
+	public int N;
 	public double dA;
-	private double dx = 1.0E-3; // Computation spatial step (m)
+	public double dx = 1.0E-3; // Computation spatial step (m)
 
 	/**
 	 * Geometric parameters as shown in Fig.8.8
@@ -97,7 +98,7 @@ public class AircooledCondenser {
 		this.airTotalMassFlow = airTotalMassFlow; // In kg/s
 		this.airNodeMassFlow = airTotalMassFlow/ntf; // In kg/s   ????????????????
 		this.airInletTemperature = airInletTemperature; // In K
-
+		
 	}
 
 	public ThState computeOutlet(ThState fluidInletState, double fluidTotalMassFlow){
