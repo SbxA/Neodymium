@@ -7,6 +7,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * 
+ * @author Tristan Agaësse
+ *
+ */ 
 
 /**
  * RectilinearGrid

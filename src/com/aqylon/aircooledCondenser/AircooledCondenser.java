@@ -6,7 +6,7 @@ import com.aqylon.thermodynamics.physics.ThState;
 
 /**
  * 
- * @author Vincent Lamblot
+ * @author Vincent Lamblot & Tristan Agaësse
  *
  */
 public class AircooledCondenser {
@@ -131,5 +131,32 @@ public class AircooledCondenser {
     
     return mixedState ;
   }
+  
+  
+  
+  
+  
+  public void printFlowPatternMap(ThFluid fluid){
+    
+    int nPoints=50;
+    double[] mWavyArray=new double[nPoints];
+    double[] mStratArray=new double[nPoints];
+    
+    ThState fluidState = new ThState(fluid);
+    double airNodeInletTemperature=300;
+    
+    for(int i=0;i<nPoints+1;i++){
+       double x=i/nPoints;
+       fluidState.setQuality(x);
+       HeatTransferLocalUnit transferUnit = new HeatTransferLocalUnit(this, airNodeInletTemperature, fluidState, this.fluidNodeMassFlow);
+       transferUnit.computeFlowPatternMapBoundaries() ;
+    
+       mWavyArray[i]=transferUnit.mWavy ;
+       mStratArray[i]=transferUnit.mStrat ;
+    }
+   
+    
+  }
+  
   
 }

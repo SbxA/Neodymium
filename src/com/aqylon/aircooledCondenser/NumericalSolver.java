@@ -4,6 +4,12 @@ import com.aqylon.thermodynamics.physics.ThFluid;
 import com.aqylon.thermodynamics.physics.ThState;
 import java.util.Hashtable;
 
+/**
+ * 
+ * @author Tristan Agaësse
+ *
+ */
+
 public class NumericalSolver {
 
   /**
@@ -30,7 +36,7 @@ public class NumericalSolver {
    * Options to control the class behavior  
    */
   String typeEnergyBalance ; // energy terms to take into account in the energy balance in function computeStateOfNextFluidNode
-  String debugMode ; // to control if you want to get lots of physical properties in arrays for debug
+  boolean debugMode ; // to control if you want to get lots of physical properties in arrays for debug
   
   private Hashtable debugPhysicalProperties ; // lots of physical properties in arrays for debug
   
@@ -40,10 +46,6 @@ public class NumericalSolver {
   private ThState fluidInletState;
   private double fluidNodeMassFlow ;
   
-  /**
-  * FlowPatternMap of the pipes
-  */
-  private FlowPatternMap flowPatternMap ;
  
   /**
    * Grid to visualize computed properties with paraview
@@ -71,7 +73,6 @@ public class NumericalSolver {
       airTemperatures[i] = condenser.airInletTemperature;
     }
     
-    this.flowPatternMap = new FlowPatternMap(   ) ;
   }
   
     
@@ -116,10 +117,15 @@ public class NumericalSolver {
           int currentDeltaTNode = getDeltaTNode(iPipe, iPass, iNode);
           int currentAirNode = getAirNode(iPipe, iPass, iNode);
           
-          HeatTransferLocalUnit currentTransferUnit = new HeatTransferLocalUnit(this.condenser, this.flowPatternMap, this.airTemperatures[currentAirNode], this.innerFluidStates[currentFluidNode], fluidNodeMassFlow);
+          HeatTransferLocalUnit currentTransferUnit = new HeatTransferLocalUnit(this.condenser, this.airTemperatures[currentAirNode], this.innerFluidStates[currentFluidNode], fluidNodeMassFlow);
+          currentTransferUnit.computeTransfer();
           this.deltaT[currentDeltaTNode] = currentTransferUnit.getAirNodeOutletDeltaT();
           
-          ThState  fluidNodeOutletState = computeStateOfNextFluidNode(currentFluidNode, currentTransferUnit);
+          if(debugMode){
+            Hashtable properties=currentTransferUnit.getDebugPhysicalProperties();
+          }
+          
+          ThState  fluidNodeOutletState = computeLocalEnergyBalance(currentFluidNode, currentTransferUnit);
         
           int nextFluidNode = getFluidNode(iPipe, iPass, iNode+1);
           this.innerFluidStates[nextFluidNode] = fluidNodeOutletState ;
@@ -134,7 +140,7 @@ public class NumericalSolver {
   }
 
   
-  private ThState computeStateOfNextFluidNode(int currentFluidNode, HeatTransferLocalUnit currentTransferUnit){
+  private ThState computeLocalEnergyBalance(int currentFluidNode, HeatTransferLocalUnit currentTransferUnit){
         
     ThState currentState=this.innerFluidStates[currentFluidNode];  
     
@@ -146,7 +152,6 @@ public class NumericalSolver {
       fluidNodeOutletState.setEnthalpy(enthalpy);
     }
     
-     
     return fluidNodeOutletState ;
   }
   
