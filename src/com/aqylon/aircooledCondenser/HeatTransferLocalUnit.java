@@ -294,11 +294,6 @@ public class HeatTransferLocalUnit {
   }
 
 
-	/*
-	 * Utilities
-	 */
-
-
 	public double getAirNodeOutletDeltaT(){
 		return airNodeOutletDeltaT;
 	}

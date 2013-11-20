@@ -57,6 +57,7 @@ public class NumericalSolver {
     
     typeEnergyBalance="NoConvection";
     
+    this.condenser=condenser;
     nPipe=condenser.nt;
     nf=condenser.nf;
     N=condenser.N;
@@ -72,6 +73,11 @@ public class NumericalSolver {
     for(int i=0; i < airTemperatures.length; i++){
       airTemperatures[i] = condenser.airInletTemperature;
     }
+    
+    for(int iPipe=0 ; iPipe<nPipe ; iPipe++){
+      innerFluidStates[getFluidNode(iPipe, 0, 0)]= this.fluidInletState;
+    }
+    
     
   }
   
@@ -108,7 +114,9 @@ public class NumericalSolver {
   
   
   private void computeAllInnerStatesAlongPipes(){
-        
+    
+    
+    
     for(int iPipe=0; iPipe < nPipe; iPipe++){
       for(int iPass=0 ; iPass < nPass ; iPass++ ){
         for(int iNode=0 ; iNode < N  ; iNode ++){
@@ -145,6 +153,7 @@ public class NumericalSolver {
     ThState currentState=this.innerFluidStates[currentFluidNode];  
     
     ThState fluidNodeOutletState = new ThState(currentState.fluid);
+    fluidNodeOutletState=fluidNodeOutletState.create();
     
     if(typeEnergyBalance.equals("NoConvection")){
       fluidNodeOutletState.pressure = currentState.pressure;
@@ -183,7 +192,7 @@ public class NumericalSolver {
     
     int node = iPipe*(N+1)+iPass*(nPipe*(N+1)) ;  //last column is outside the condenser on the right 
     
-    if(iPass%2==1){
+    if((iPass % 2)==0){
       node=node+iNode;
     }
     else{
@@ -196,7 +205,7 @@ public class NumericalSolver {
     
     int node = N + iPipe*N+iPass*(nPipe*N) ;//first row is upside the condenser, it's the air output
     
-    if(iPass%2==1){
+    if((iPass%2)==0){
       node=node+iNode;
     }
     else{
@@ -209,7 +218,7 @@ public class NumericalSolver {
     
     int node = iPipe*N+iPass*(nPipe*N) ;//first row is upside the condenser, it's the air output
     
-    if(iPass%2==1){
+    if((iPass%2)==0){
       node=node+iNode;
     }
     else{
@@ -244,7 +253,7 @@ public class NumericalSolver {
     
     int node=(nPass-1)*nPipe*(N+1);
     
-    if(nPass%2==0){
+    if((nPass%2)==0){
       node=node+iPipe*(N+1);
     }
     else{
