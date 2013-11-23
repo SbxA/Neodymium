@@ -38,7 +38,7 @@ public class RectilinearGrid {
   
   public void addField(double[][] property, String name){
     assert property.length == Nx && property[0].length==Ny :
-      "This property doesn't have the same dimensions as the RectilinearGrid.";
+      "This array doesn't have the same dimensions as the RectilinearGrid.";
     physicalProperties.put(name,property);
   }
     

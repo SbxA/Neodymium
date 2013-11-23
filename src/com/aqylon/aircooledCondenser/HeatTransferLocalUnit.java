@@ -1,7 +1,6 @@
 package com.aqylon.aircooledCondenser;
 
 import com.aqylon.thermodynamics.physics.ThState;
-import com.aqylon.thermodynamics.physics.ThFluid;
 import com.aqylon.utilities.quadraticEquation.quadraticEquation;
 
 import java.util.Hashtable;
@@ -31,7 +30,7 @@ public class HeatTransferLocalUnit {
 	di, W, L, ntf, Do, Nm, Af, b, Db, Ad, airNodeMassFlow, muAir, 
 	kAir, PrAir, kFins, Ao;
 
-  double ReL, PrL, delta, fi, velocitiesRatio, q=enthalpyTransfered;
+  double ReL, PrL, delta, fi, velocitiesRatio, q;
   double alfaC=0,alfaF=0,alfa;
   double AL;
 	
@@ -77,7 +76,8 @@ public class HeatTransferLocalUnit {
 		cpL = fluidNodeInletState.saturatedLiquidState.isobaricHeatCapacity;
 		kL = fluidNodeInletState.saturatedLiquidState.thermalConductivity;
 		sigma = fluidNodeInletState.saturatedLiquidState.surfaceTension;
-
+		
+		
 	}
 
 	
@@ -87,14 +87,17 @@ public class HeatTransferLocalUnit {
 
 	    // Start automatically computation
 
-	    this.enthalpyTransfered = 1000.0; // In J, 1st hypothesis
+	    this.enthalpyTransfered = computeQdnb( computeHld(computeThetaStrat(computeEpsilon(x)))); // In J, 1st hypothesis
+	    q=enthalpyTransfered/dA;
 	    double enthalpyTransferedBuffer = 0.0;
 
 	    while(Math.abs(enthalpyTransfered-enthalpyTransferedBuffer)/enthalpyTransfered > 1.0E-5){
 	      enthalpyTransferedBuffer = enthalpyTransfered;
 	      fluidTransferCoefficient = computeFluidTransferCoefficient();
 	      totalTransferCoefficient = 1/(1/fluidTransferCoefficient+1/airTransferCoefficient);
-	      enthalpyTransfered = totalTransferCoefficient*dA*(fluidNodeInletState.temperature-airNodeInletTemperature); // Chosen as positive in the fluid to air way. 
+	      enthalpyTransfered=totalTransferCoefficient*dA*(fluidNodeInletState.temperature-airNodeInletTemperature); // Chosen as positive in the fluid to air way.
+	      q=enthalpyTransfered/dA;
+	      
 	    }
 
 	    airNodeOutletDeltaT = enthalpyTransfered/(cpAir*airNodeMassFlow);
@@ -137,10 +140,11 @@ public class HeatTransferLocalUnit {
 		default:
 		  throw new RuntimeException("Flow pattern not defined. Do no know how to solve this case !!");
 		}
-
+		if(x==0){theta=0;}
 		
 		velocitiesRatio = rhoL*x*(1-epsilon)/(rhoG*epsilon*(1-x)); // eq. (8.1.36/37)
-
+		if(x==0){velocitiesRatio=0;}
+		
 		if(epsilon>0.5){
 			quadraticEquation eq8135 = new quadraticEquation(4.0, -4*di*di, 8*AL/(2*Math.PI-theta)+Math.pow(di, 4)-di*di); 
 			delta = eq8135.solution; // eq. (8.1.35)
@@ -202,7 +206,7 @@ public class HeatTransferLocalUnit {
 	  
     double fluidNodeMassVelocity = 4*fluidNodeMassFlow/(Math.PI*di*di);
 	  
-    if(fluidNodeMassVelocity<mStrat){
+    if(fluidNodeMassVelocity<mStrat || x==0 ){
       return FlowPattern.StratifiedFlow;
 
     }
@@ -222,16 +226,11 @@ public class HeatTransferLocalUnit {
 	
 	public void computeFlowPatternMapBoundaries(){
 	  
-	  // Determine epsilon - void fraction
-    double epsilonH, epsilonR;
-    epsilonH = 1/(1+rhoG*((1-x)/x)/rhoL); // eq. (8.1.28)
-    epsilonR = (x/rhoG)*1/((1+0.12*(1-x))*((x/rhoG)+(1-x)/rhoL)+(1.18*(1-x)*Math.pow(g*sigma*(rhoL-rhoG),0.25)/(fluidNodeMassFlow*Math.pow(rhoL, 0.5)))); // eq. (8.1.29)
-    this.epsilon = (epsilonH-epsilonR)/Math.log(epsilonH/epsilonR); // eq. (8.1.27)
-
-
+	  this.epsilon=computeEpsilon(x);
 
     // Determine the local flow pattern using Thome-El Hajal map
-    this.thetaStrat=2*Math.PI-2*(Math.PI*(1-epsilon)+Math.pow(3*Math.PI/2, 1/3)*(1-2*(1-epsilon)+Math.pow(1-epsilon, 1/3)-Math.pow(epsilon, 1/3))-(1-epsilon)*epsilon*(1-2*(1-epsilon))*(1+4*(Math.pow(1-epsilon, 2)+Math.pow(epsilon, 2)))/200); // eq. (8.1.31)
+	  this.thetaStrat=computeThetaStrat(epsilon);
+    
     AL = Math.pow(di, 2)*((2*Math.PI-thetaStrat)-Math.sin(2*Math.PI-thetaStrat))/8; // eq. (8.1.24)
     this.A = AL/(1-epsilon);
     
@@ -253,44 +252,102 @@ public class HeatTransferLocalUnit {
     ALd = A*(1-epsilon)/(di*di); // eq. (12.4.20)
     mStrat = Math.pow(266.3*266.3*ALd*AGd*AGd*rhoG*(rhoL-rhoG)*muL*g/(x*x*(1-x)*Math.pow(Math.PI, 3)), 1/3)+20*x; // eq. (12.4.17)
     
-    
+	}
+	
+	private double computeEpsilon(double x){
+	// Determine epsilon - void fraction
+	  if(x==0){
+      return 0;
+    }
+	  if(x==1){
+	    return 1;
+	  }
+    double epsilonH, epsilonR;
+    epsilonH = 1/(1+rhoG*((1-x)/x)/rhoL); // eq. (8.1.28)
+    epsilonR = (x/rhoG)*1/((1+0.12*(1-x))*((x/rhoG)+(1-x)/rhoL)+(1.18*(1-x)*Math.pow(g*sigma*(rhoL-rhoG),0.25)/(fluidNodeMassFlow*Math.pow(rhoL, 0.5)))); // eq. (8.1.29)
+    return (epsilonH-epsilonR)/Math.log(epsilonH/epsilonR); // eq. (8.1.27)
+	}
+	
+	
+	private double computeThetaStrat(double epsilon){
+	  return thetaStrat=2*Math.PI-2*(Math.PI*(1-epsilon)+Math.pow(3*Math.PI/2, 1/3)*(1-2*(1-epsilon)+Math.pow(1-epsilon, 1/3)-Math.pow(epsilon, 1/3))-(1-epsilon)*epsilon*(1-2*(1-epsilon))*(1+4*(Math.pow(1-epsilon, 2)+Math.pow(epsilon, 2)))/200); // eq. (8.1.31)
+	}
+	
+	private double computeQdnb(double hLd){
+	  return  0.131*Math.pow(rhoG, 0.5)*hLd*Math.pow(g*(rhoL-rhoG)*sigma, 0.25) ;// eq. (12.4.9)
+	}
+	 
+	private double computeHld(double thetaStrat){
+	  return 0.5*(1-Math.cos((2*Math.PI-thetaStrat)/2)); // eq.(12.4.22)
 	}
 	
   private double mWavy(double x){
-    double WeOnFrL, qDNB, F1, F2, AGd, q=enthalpyTransfered;
-
-    hLd = 0.5*(1-Math.cos((2*Math.PI-thetaStrat)/2)); // eq.(12.4.22)
-    AGd = A*epsilon/(di*di); // eq. (12.4.21)
+    boolean flagBegin=false ;
+    if(x==0){
+      x=0.01; //I change the value of x because I had troubles with infinite values for x=0. Maybe this wouldn't occur anymore since I suppressed the coefficient. See discussion about the c coefficient below.
+      flagBegin=true;
+    }
+    
+    double WeOnFrL, qDNB, F1, F2, AGd, qLocal;
+    double epsilonLocal=computeEpsilon(x);
+    double thetaStratLocal=computeThetaStrat(epsilonLocal);
+    
+    double hLdLocal =computeHld( thetaStratLocal);
+    AGd = A*epsilonLocal/(di*di); // eq. (12.4.21)
     WeOnFrL = g*di*di*rhoL/sigma; //eq. (12.4.6)
-    qDNB = 0.131*Math.pow(rhoG, 0.5)*hLd*Math.pow(g*(rhoL-rhoG)*sigma, 0.25); // eq. (12.4.9)
-    F1 = 646.0*Math.pow(q/qDNB, 2)+64.8*(q/qDNB); // eq. (12.4.8a)
-    F2 = 18.8*(q/qDNB)+1.023; // eq. (12.4.8b)
-
-    return Math.pow(16*Math.pow(AGd, 3)*g*di*rhoL*rhoG*((Math.PI*Math.PI*Math.pow(1-x, -F1)/(25*hLd*hLd))*Math.pow(WeOnFrL, -F2)+1)/(x*x*Math.PI*Math.PI*Math.pow(1-Math.pow(2*hLd-1, 2), 0.5)), 0.5)+50-75*Math.exp(-Math.pow(x*x-0.97, 2)/(x*(1-x))); // eq. (12.4.1/18)
+    qDNB = computeQdnb(hLdLocal);
+    
+    //this part is related to the c coefficient as I discuss 
+    if(x==this.x || flagBegin){
+       qLocal=q;
+    }
+    else{
+       qLocal=0.1*qDNB;
+    }
+    F1 = 646.0*Math.pow(qLocal/qDNB, 2)+64.8*(qLocal/qDNB); // eq. (12.4.8a)
+    F2 = 18.8*(qLocal/qDNB)+1.023; // eq. (12.4.8b)
+    
+    double b=-75*Math.exp(-Math.pow(x*x-0.97, 2)/(x*(1-x)));
+    double c=((Math.PI*Math.PI*Math.pow(1-x, -F1)/(25*hLdLocal*hLdLocal))*Math.pow(WeOnFrL, -F2)+1);
+    //here I will use c=1  because c often takes much too high values. This c coefficient is related to the dryout of the top of the pipe, which likely occurs only during evaporation : 12.4.8 and 12.5 discussion  
+    c=1;
+    double mWa=Math.pow(16*Math.pow(AGd, 3)*g*di*rhoL*rhoG*c/(x*x*Math.PI*Math.PI*Math.pow(1-Math.pow(2*hLdLocal-1, 2), 0.5)), 0.5)+50+b; // eq. (12.4.1/18)
+    return mWa ;
   }
 
-  /**
-   * 
-   * @param x
-   * @return
-   */
-  private double mWavy_derivative(double x){
-    double dx = 1.0E-5;
-
-    return (mWavy(x+dx)-mWavy(x))/dx;
-  }
 
   /**
-   * 
+   * Find the minimum of the mWawy function using a trial and error method.
+   * H.H. Rosenbrock, « An automatic method for finding the greatest or least value of a function », Comput. J., 3, 175 (1960)
    * @return
    */
   private double get_x_mWavyMin(){
-    double x = 0.1, error = 1.0E-5, alfa = 0.5;
-
-    while(mWavy_derivative(x)>error){
-      x = x - alfa*mWavy_derivative(x);
+    double precision = 1.0E-5 ;
+    double step=0.1 , dilatation=3 , contraction=0.4;
+    
+    double currentPoint=0.6 ;
+    double mWavyCurrent=mWavy(currentPoint);
+    double trialPoint=currentPoint+step;
+    double mWavyTrial=mWavy(trialPoint);   
+    
+    while(Math.abs( (mWavyCurrent-mWavyTrial)/mWavyCurrent )>precision){
+      if(mWavyTrial<mWavyCurrent){
+        currentPoint=trialPoint;
+        mWavyCurrent=mWavyTrial;
+        
+        step=dilatation*step;
+        trialPoint=currentPoint+step;
+        trialPoint=Math.min(trialPoint,0.99);trialPoint=Math.max(trialPoint,0.01);
+        mWavyTrial=mWavy(trialPoint);
+      }
+      else{
+        step=-contraction*step;
+        trialPoint=currentPoint+step;
+        trialPoint=Math.min(trialPoint,0.99);trialPoint=Math.max(trialPoint,0.01);
+        mWavyTrial=mWavy(trialPoint);  
+      }
     }
-    return x;
+    return currentPoint;
   }
 
 

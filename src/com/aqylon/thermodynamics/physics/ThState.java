@@ -148,7 +148,7 @@ public class ThState{
 			break;
 			
 		case Water: // source : http://www.peacesoftware.de/einigewerte/calc_dampf.php5
-			s.temperature = 36.0 + 273.15;
+			s.temperature = 100.0 + 273.15;
 			s.pressure = 0.9894E5;
 			s.saturatedLiquidState = new ThState(fluid);
 			s.saturatedVaporState = new ThState(fluid);
@@ -168,7 +168,7 @@ public class ThState{
 			// Saturated vapor state properties
 			s.saturatedVaporState.temperature = s.temperature;
 			s.saturatedVaporState.pressure = s.pressure;
-			s.saturatedLiquidState.phase = ThPhase.SaturatedVapor;
+			s.saturatedVaporState.phase = ThPhase.SaturatedVapor;
 			s.saturatedVaporState.quality = 1.0;
 			s.saturatedVaporState.density = 7.49;
 			s.saturatedVaporState.enthalpy = 366.41E3;

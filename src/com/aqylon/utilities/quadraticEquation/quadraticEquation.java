@@ -30,7 +30,8 @@ public class quadraticEquation {
 			r2 = (-b-Math.sqrt(delta))/(2*a);
 
 			if(r1>0.0 && r2>0.0){
-				throw new RuntimeException("Both roots are positive. Do not know which one to choose.");
+				//throw new RuntimeException("Both roots are positive. Do not know which one to choose.");
+			  solution=r1+r2 ; //here we do not know what root to choose, so I choose to take the middle. In the case I studied, r1 was indeed almost equal to r2.
 			}
 			else if(r1<0.0 && r2<0.0){
 				throw new RuntimeException("Both roots are negative.");
@@ -42,7 +43,7 @@ public class quadraticEquation {
 				solution = r2;
 			}
 		}
-		else if(delta==0){	
+		else if(Math.abs(delta)<1E-4){	
 			r1 = -b/(2*a);
 			r2 = r1;
 		}

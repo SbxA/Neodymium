@@ -104,18 +104,27 @@ public class NumericalSolver {
       
       computeAllInnerStatesAlongPipes();
       
-      //Calcul des critères de convergence  
-      converged=true ;                                // TO DO
+      //Computation of convergence criteria : uniform convergence of deltaT to its real value
+      converged=true ;                     
+      for(int iAirFlow=0 ; iAirFlow<N ; iAirFlow ++){
+        for(int iNode=0 ; iNode < nf ; iNode++){
+          int currentAirNode=getAirFlowNode(iAirFlow,iNode);
+          int nextAirNode=getAirFlowNode(iAirFlow,iNode+1);
+          int currentDeltaTNode=getAirFlowDeltaTNode(iAirFlow,iNode);
+          
+          double deltaTError=(airTemperatures[nextAirNode]-airTemperatures[currentAirNode]-deltaT[currentDeltaTNode])/airTemperatures[currentAirNode];
+          if(Math.abs(deltaTError)>1E-4){
+            converged=false;
+          }
+        }
+      }
       
       updateAirTemperatureMap();
-
     }
   }
   
   
   private void computeAllInnerStatesAlongPipes(){
-    
-    
     
     for(int iPipe=0; iPipe < nPipe; iPipe++){
       for(int iPass=0 ; iPass < nPass ; iPass++ ){
@@ -131,6 +140,7 @@ public class NumericalSolver {
           
           if(debugMode){
             Hashtable properties=currentTransferUnit.getDebugPhysicalProperties();
+            
           }
           
           ThState  fluidNodeOutletState = computeLocalEnergyBalance(currentFluidNode, currentTransferUnit);
@@ -140,9 +150,12 @@ public class NumericalSolver {
         }
         
         // transition from one pass to the other
-        int previousPassFluidNode= getFluidNode(iPipe, iPass, N);
-        int nextPassFluidNode= getFluidNode(iPipe, iPass+1, 0);
-        this.innerFluidStates[nextPassFluidNode]=this.innerFluidStates[previousPassFluidNode];
+        if(iPass<nPass-1){
+          int previousPassFluidNode= getFluidNode(iPipe, iPass, N);
+          int nextPassFluidNode= getFluidNode(iPipe, iPass+1, 0);
+          this.innerFluidStates[nextPassFluidNode]=this.innerFluidStates[previousPassFluidNode];
+        }
+        
       }
     }
   }
@@ -157,7 +170,7 @@ public class NumericalSolver {
     
     if(typeEnergyBalance.equals("NoConvection")){
       fluidNodeOutletState.pressure = currentState.pressure;
-      double enthalpy=currentState.enthalpy + currentTransferUnit.enthalpyTransfered ;
+      double enthalpy=currentState.enthalpy + currentTransferUnit.enthalpyTransfered/fluidNodeMassFlow ;
       fluidNodeOutletState.setEnthalpy(enthalpy);
     }
     
@@ -209,7 +222,7 @@ public class NumericalSolver {
       node=node+iNode;
     }
     else{
-      node=node+N-iNode;
+      node=node+N-1-iNode;
     }
     return node;
   }
@@ -222,26 +235,26 @@ public class NumericalSolver {
       node=node+iNode;
     }
     else{
-      node=node+N-iNode;
+      node=node+N-1-iNode;
     }
     return node ;
   }  
   
   
   /*
-   * ... second when you are counting nodes along air flow  ...
+   * ... second when you are counting nodes along vertical air flows  ...
    */
   
   private int getAirFlowNode(int iAirFlow, int iNode){
         
-    int node = (nf+1-iNode)*N + iAirFlow ;
+    int node = (nf-iNode)*N + iAirFlow ;
     return node;
   }  
   
   
   private int getAirFlowDeltaTNode(int iAirFlow, int iNode){
     
-    int node = (nf-iNode)*N + iAirFlow ;
+    int node = (nf-1-iNode)*N + iAirFlow ;
     return node;
   }
   

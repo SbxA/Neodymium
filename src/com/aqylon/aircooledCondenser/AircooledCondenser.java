@@ -28,7 +28,6 @@ public class AircooledCondenser {
 	public double L,W;
 	public int nf, ntf, nt, np;
 
-	
 	/**
 	 * Air flow parameters
 	 */
@@ -54,9 +53,9 @@ public class AircooledCondenser {
 	/**
 	 * Computation parameters
 	 */
-	public int N;
+	public int N=100; // Number of subdivisions along the pipes
 	public double dA;
-	public double dx = 1.0E-3; // Computation spatial step (m)
+	public double dx ; // Computation spatial step (m)
 
 	/**
 	 * Geometric parameters as shown in Fig.8.8
@@ -72,7 +71,7 @@ public class AircooledCondenser {
 	 * @param airTotalMassFlow air mass flow at inlet (kg/s)
 	 * @param airInletTemperature air temperature at inlet (K)
 	 */
-	public AircooledCondenser(double di, double Do, double Db, double b, double fs, double L, int ntf, double airTotalMassFlow, double airInletTemperature){
+	public AircooledCondenser(double di, double Do, double Db, double b, double fs, double L, double W, int ntf, double airTotalMassFlow, double airInletTemperature){
 
 		this.di = di;
 		this.Do = Do;
@@ -80,6 +79,7 @@ public class AircooledCondenser {
 		this.b = b;
 		this.Nm = (int)(1/fs);
 		this.L = L;
+		this.W=W;
 		this.ntf = ntf;
 
 		Ao = Math.PI*Do; // Plain tube area per unit tube length (m^2)
@@ -89,23 +89,23 @@ public class AircooledCondenser {
 		np = 2; // Number of passes
 		nt = 2; // Number of tube(s) per pass
 
-		N = (int)(L/dx); // First size of the computation arrays
 		dx = L/N;
 		dA = Ao*dx; // Reference exchange area for each node (m^2)
 		nf = np*nt; // Second size of the computation arrays
 
 
 		this.airTotalMassFlow = airTotalMassFlow; // In kg/s
-		this.airNodeMassFlow = airTotalMassFlow/ntf; // In kg/s   ????????????????
+		this.airNodeMassFlow = airTotalMassFlow/ntf; // In kg/s   ???????????????? should I divide by ntf ?
 		this.airInletTemperature = airInletTemperature; // In K
 		
 	}
 
+	
 	public ThState computeOutlet(ThState fluidInletState, double fluidTotalMassFlow){
 		
 		this.fluidTotalMassFlow = fluidTotalMassFlow;
 		this.fluidNodeMassFlow = fluidTotalMassFlow/(nt*ntf);
-
+		
 		NumericalSolver solver=new NumericalSolver(this, fluidInletState, fluidTotalMassFlow);
     
 		ThState[] statesToMix=solver.computeOutletStateOfEachPipe();
@@ -115,48 +115,45 @@ public class AircooledCondenser {
 	}
 	
 	
-	
   public ThState mixSeveralStates(ThState[] statesToMix){
     
     ThFluid fluid=statesToMix[0].fluid;
     ThState mixedState =new ThState(fluid);
+    mixedState=mixedState.create();
     
     double quality = 0;
     for(int i=0; i<statesToMix.length ;i++ ){
       quality=statesToMix[i].quality;
     }
     quality=quality/statesToMix.length ;
-        
+    
     mixedState.setQuality( quality );
     
     return mixedState ;
   }
   
-  
-  
-  
-  
+
   public void printFlowPatternMap(ThFluid fluid){
     
     int nPoints=50;
     double[] mWavyArray=new double[nPoints];
     double[] mStratArray=new double[nPoints];
+    double quality;
     
-    ThState fluidState = new ThState(fluid);
     double airNodeInletTemperature=300;
     
-    for(int i=0;i<nPoints+1;i++){
-       double x=i/nPoints;
-       fluidState.setQuality(x);
+    for(int i=1;i<nPoints-1;i++){
+       quality=(double) i/nPoints;
+       ThState fluidState = new ThState(fluid);
+       fluidState=fluidState.create();
+       fluidState.setQuality(quality);
+       
        HeatTransferLocalUnit transferUnit = new HeatTransferLocalUnit(this, airNodeInletTemperature, fluidState, this.fluidNodeMassFlow);
        transferUnit.computeFlowPatternMapBoundaries() ;
     
        mWavyArray[i]=transferUnit.mWavy ;
        mStratArray[i]=transferUnit.mStrat ;
     }
-   
-    
   }
-  
-  
+
 }
