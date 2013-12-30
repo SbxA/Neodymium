@@ -11,18 +11,20 @@ public class HelloWorld {
 	public static void main(String[] args) {
 		System.out.println("Hello from Aqylon!");
 	
-		double di =0.5;  //di internal diameter of tube (m)
-		double Do =0.55;  //Do external diameter of tube without fins (m) 
-		double Db =0.7 ;  //Db external diameter of tube with fins (m) // ask
-		double b =0.01;   //b fin width (m) // ask
-		double fs =0.05;  //fs fin spacing (m) 
-		double L  =30;  //L condenser tubes length (m)
-		double W = 5 ;  //W condenser width (m)
+		double di =0.34;  //di internal diameter of tube (m)
+		double Do =0.35;  //Do external diameter of tube without fins (m) 
+		double Db =0.40 ;  //Db external diameter of tube with fins (m) // ask
+		double b =0.001;   //b fin width (m) // ask
+		double fs =0.003;  //fs fin spacing (m) 
+		double L  =5;  //L condenser tubes length (m)
+		double W = 2 ;  //W condenser width (m)
 		int ntf = 4 ; // ntf number of tube horizontal rows // ask
-		double airTotalMassFlow =100 ;//airTotalMassFlow air mass flow at inlet (kg/s)
+		int np = 2 ; // np number of passes
+		int nt = 6 ; // nt number of tubes per pass
+		double airTotalMassFlow =50 ;//airTotalMassFlow air mass flow at inlet (kg/s)
 		double airInletTemperature  = 290;//airInletTemperature air temperature at inlet (K)
 		
-		AircooledCondenser condenseur =new AircooledCondenser(di, Do, Db, b, fs, L, W,ntf,airTotalMassFlow, airInletTemperature);
+		AircooledCondenser condenseur =new AircooledCondenser(di, Do, Db, b, fs, L, W,ntf,np,nt,airTotalMassFlow, airInletTemperature);
 		
 		ThFluid fluid=ThFluid.Water;
 		ThState fluidInletState=new ThState(fluid);
@@ -32,8 +34,8 @@ public class HelloWorld {
 		ThState outlet=condenseur.computeOutlet( fluidInletState, 4);
 		System.out.println( outlet.quality );
 		
-		//condenseur.printFlowPatternMap(fluid);
-
+		condenseur.printFlowPatternMap(fluid);
+		
 	}
 
 }

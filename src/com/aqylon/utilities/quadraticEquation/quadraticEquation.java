@@ -3,7 +3,7 @@ package com.aqylon.utilities.quadraticEquation;
 public class quadraticEquation {
 
 	public double r1, r2, solution;
-	private double  a, b, c, delta;
+	private double  a, b, c, discriminant;
 
 	/**
 	 * @author Vincent Lamblot
@@ -24,10 +24,10 @@ public class quadraticEquation {
 	}
 
 	private void solve(){
-		delta = b*b-4*a*c;
-		if(delta>0.0){
-			r1 = (-b+Math.sqrt(delta))/(2*a);
-			r2 = (-b-Math.sqrt(delta))/(2*a);
+		discriminant = b*b-4*a*c;
+		if(discriminant>0.0){
+			r1 = (-b+Math.sqrt(discriminant))/(2*a);
+			r2 = (-b-Math.sqrt(discriminant))/(2*a);
 
 			if(r1>0.0 && r2>0.0){
 				//throw new RuntimeException("Both roots are positive. Do not know which one to choose.");
@@ -43,12 +43,12 @@ public class quadraticEquation {
 				solution = r2;
 			}
 		}
-		else if(Math.abs(delta)<1E-4){	
+		else if(Math.abs(discriminant)<1E-4){	
 			r1 = -b/(2*a);
 			r2 = r1;
 		}
 
-		else if(delta<0.0){
+		else if(discriminant<0.0){
 			throw new RuntimeException("Discriminant is negative. Do not know how to solve this case !!");
 		}
 		else{

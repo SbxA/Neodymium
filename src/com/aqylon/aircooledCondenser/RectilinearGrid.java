@@ -15,7 +15,7 @@ import java.util.Arrays;
 
 /**
  * RectilinearGrid
- * Class used to visualize physical properties on a cartesian grid with Paraview 
+ * Class used to visualize physical properties on a cartesian grid with the .vtk rectilinear grid file format
  */
 
 public class RectilinearGrid {
@@ -109,7 +109,7 @@ public class RectilinearGrid {
       
       bw.close();
  
-      System.out.println("Paraview file writen.");
+      System.out.println("VTK file writen.");
  
     } catch (IOException ex) {
       ex.printStackTrace();
