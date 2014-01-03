@@ -274,7 +274,7 @@ public class AircooledCondenser {
    */
   public class HeatTransferLocalUnit {
 
-    @SuppressWarnings("unused")
+   // @SuppressWarnings("unused")
     private AircooledCondenser condenser;
 
     /**
@@ -642,8 +642,8 @@ public class AircooledCondenser {
       
       double b=-75*Math.exp(-Math.pow(x*x-0.97, 2)/(x*(1-x)));
       double c=((Math.PI*Math.PI*Math.pow(1-x, -F1)/(25*hLdLocal*hLdLocal))*Math.pow(WeOnFrL, -F2)+1);
-      double mWa=Math.pow(16*Math.pow(AGd, 3)*g*di*rhoL*rhoG*c/(x*x*Math.PI*Math.PI*Math.pow(1-Math.pow(2*hLdLocal-1, 2), 0.5)), 0.5)+50+b; // eq. (12.4.1/18)
-      return mWa ;
+      return Math.pow(16*Math.pow(AGd, 3)*g*di*rhoL*rhoG*c/(x*x*Math.PI*Math.PI*Math.pow(1-Math.pow(2*hLdLocal-1, 2), 0.5)), 0.5)+50+b; // eq. (12.4.1/18)
+   
     }
 
 

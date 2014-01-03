@@ -159,7 +159,7 @@ public class ThState{
 			s.saturatedLiquidState.phase = ThPhase.SaturatedLiquid;
 			s.saturatedLiquidState.quality = 0.0;
 			s.saturatedLiquidState.density = 1.343E3;
-			s.saturatedLiquidState.enthalpy = 234.96E3;
+			s.saturatedLiquidState.enthalpy = 419E3;
 			s.saturatedLiquidState.isobaricHeatCapacity = 1.0473E3;
 			s.saturatedLiquidState.thermalConductivity = 0.08;
 			s.saturatedLiquidState.dynamicViscosity = 4.57E-4;
@@ -171,7 +171,7 @@ public class ThState{
 			s.saturatedVaporState.phase = ThPhase.SaturatedVapor;
 			s.saturatedVaporState.quality = 1.0;
 			s.saturatedVaporState.density = 7.49;
-			s.saturatedVaporState.enthalpy = 366.41E3;
+			s.saturatedVaporState.enthalpy = 2676E3;
 			s.saturatedVaporState.isobaricHeatCapacity = 0.8979E3;
 			s.saturatedVaporState.thermalConductivity = 0.012;
 			s.saturatedVaporState.dynamicViscosity = 1.14E-5;

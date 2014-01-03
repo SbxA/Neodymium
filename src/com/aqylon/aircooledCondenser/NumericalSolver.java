@@ -48,7 +48,7 @@ public class NumericalSolver {
   private ThState fluidInletState;
   private double fluidNodeMassFlow ;
   
- 
+  
   /**
    * Grid to visualize computed properties with paraview
    */
@@ -66,7 +66,7 @@ public class NumericalSolver {
     nPass=condenser.np;
     
     this.fluidInletState=fluidInletState; 
-    fluidNodeMassFlow=fluidTotalMassFlow/ nPipe;
+    fluidNodeMassFlow=fluidTotalMassFlow/ (nPipe*condenser.ntf);
     
     deltaT = new double[N*nf]; // In K
     innerFluidStates = new ThState[(N+1)*nf];
@@ -142,7 +142,7 @@ public class NumericalSolver {
           
           if(debugMode){
             Hashtable properties=currentTransferUnit.getDebugPhysicalProperties();
-            
+            //not usefull now
           }
           
           ThState  fluidNodeOutletState = computeLocalEnergyBalance(currentFluidNode, currentTransferUnit);
