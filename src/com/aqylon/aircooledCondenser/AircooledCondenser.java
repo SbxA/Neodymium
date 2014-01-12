@@ -153,7 +153,7 @@ public class AircooledCondenser {
 	/**
 	 * Number of computational subdivisions steps along the pipes
 	 */
-	public int N=100; 
+	public int N=10; 
 	
 	/**
    * Area of a pipe subdivision step : exchange area for each node (m^2)
@@ -484,8 +484,10 @@ public class AircooledCondenser {
       
       
       if(epsilon>0.5){
-        quadraticEquation eq8135 = new quadraticEquation(4.0, -4*di*di, 8*AL/(2*Math.PI-theta)+Math.pow(di, 4)-di*di); 
-        delta = eq8135.solution; // eq. (8.1.35)
+        delta=(di-Math.sqrt(di*di-8*AL/(2*Math.PI-theta)))/2; //modification of equation 8.1.35 to make it homogeneous. TODO : check the new formula
+        
+        //quadraticEquation eq8135 = new quadraticEquation(4.0, -4*di*di, 8*AL/(2*Math.PI-theta)+Math.pow(di, 4)-di*di); 
+        //delta = eq8135.solution; // eq. (8.1.35)
       }
       else{
         delta = di/2;

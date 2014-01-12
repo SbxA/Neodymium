@@ -17,7 +17,7 @@ public class HelloWorld {
 		double b =0.001;   //b fin width (m) // ask
 		double fs =0.003;  //fs fin spacing (m) 
 		double L  =5;  //L condenser tubes length (m)
-		double W = 2 ;  //W condenser width (m)
+		double W = 10 ;  //W condenser width (m)
 		int ntf = 10 ; // ntf number of tube horizontal rows // ask
 		int np = 2 ; // np number of passes
 		int nt = 2 ; // nt number of tubes per pass
@@ -29,7 +29,7 @@ public class HelloWorld {
 		ThFluid fluid=ThFluid.Water;
 		ThState fluidInletState=new ThState(fluid);
 		fluidInletState=fluidInletState.create();
-		fluidInletState.setQuality(0.1);
+		fluidInletState.setQuality(0.8);
 		
 		ThState outlet=condenseur.computeOutlet( fluidInletState, 4);
 		System.out.println( outlet.quality );
