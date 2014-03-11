@@ -31,10 +31,10 @@ public class HelloWorld {
 		fluidInletState=fluidInletState.create();
 		fluidInletState.setQuality(0.8);
 		
-		ThState outlet=condenseur.computeOutlet( fluidInletState, 4);
-		System.out.println( outlet.quality );
+		ThState outlet=condenseur.computeOutlet(fluidInletState, 4);
+		System.out.println(outlet.quality);
 		
-		condenseur.printFlowPatternMap(fluid);
+		//condenseur.printFlowPatternMap(fluid);
 		
 	}
 
