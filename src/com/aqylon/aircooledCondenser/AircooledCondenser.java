@@ -1,5 +1,8 @@
 package com.aqylon.aircooledCondenser;
 
+import java.text.DecimalFormat;
+import java.text.Format;
+
 import com.aqylon.thermodynamics.physics.ThFluid;
 import com.aqylon.thermodynamics.physics.ThState;
 
@@ -9,7 +12,12 @@ import com.aqylon.thermodynamics.physics.ThState;
  *
  */
 public class AircooledCondenser {
-
+	
+	/**
+	 * Standard format 0.##
+	 */
+	public final static Format std = new DecimalFormat("0.##");
+	
 	/**
 	 * Gravity of Earth (m/s^2)
 	 */
@@ -208,11 +216,12 @@ public class AircooledCondenser {
 		this.fluidTotalMassFlow = fluidTotalMassFlow;
 		fluidNodeMassFlow = this.fluidTotalMassFlow/(nt*ntf);
 
-		NumericalSolver solver=new NumericalSolver(this, fluidInletState, fluidTotalMassFlow);
+		NumericalSolver solver = new NumericalSolver(this, fluidInletState, fluidTotalMassFlow);
 
-		ThState[] statesToMix=solver.computeOutletStateOfEachPipe();
+		ThState[] statesToMix = solver.computeOutletStateOfEachPipe();
 
 		ThState outletState = mixSeveralStates(statesToMix);
+		
 		return outletState;
 	}
 
@@ -250,7 +259,7 @@ public class AircooledCondenser {
 			fluidState=fluidState.create();
 			fluidState.setQuality(quality);
 
-			HeatTransferLocalUnit transferUnit = new HeatTransferLocalUnit(airNodeInletTemperature, fluidState);
+			LocalHeatTransferUnit transferUnit = new LocalHeatTransferUnit(airNodeInletTemperature, fluidState);
 			transferUnit.computeFlowPatternMapBoundaries() ;
 
 			mWavyArray[i]=transferUnit.mWavy ;
@@ -263,7 +272,7 @@ public class AircooledCondenser {
 	 * Compute the local diphasic heat exchanges based on the model developped in
 	 * E. CAO - "Heat transfer in process engineering" - Ch.8 "Finned tubes" - Sec. 8-2-2 "Heat Transfer in Air Coolers" - pp.236-241
 	 */
-	public class HeatTransferLocalUnit {
+	public class LocalHeatTransferUnit {
 
 		/**
 		 * Temperature of the air arriving in this node
@@ -392,7 +401,7 @@ public class AircooledCondenser {
 		 * @param fluidNodeInletState
 		 * @param fluidNodeMassFlow
 		 */
-		public HeatTransferLocalUnit(double airNodeInletTemperature, ThState fluidNodeInletState){
+		public LocalHeatTransferUnit(double airNodeInletTemperature, ThState fluidNodeInletState){
 
 			this.fluidNodeInletState = fluidNodeInletState;
 			this.airNodeInletTemperature=airNodeInletTemperature;
@@ -409,12 +418,11 @@ public class AircooledCondenser {
 		}
 
 
-		public void computeTransfer(){
+		public void computeTransfer() throws Exception{
 
 			airTransferCoefficient = computeAirTransferCoefficient();
 
-			// Start automatically computation
-
+			// Start automatic computation
 			this.enthalpyTransfered = 1000; // In J, 1st hypothesis
 			q=enthalpyTransfered/dA;
 			double enthalpyTransferedBuffer = 0.0;
@@ -426,9 +434,12 @@ public class AircooledCondenser {
 				enthalpyTransfered=totalTransferCoefficient*dA*(fluidNodeInletState.temperature-airNodeInletTemperature); // Chosen as positive in the fluid to air way.
 				q=enthalpyTransfered/dA;
 			}
-
+			
+			System.out.println("Air heat transfer coefficient :"+std.format(airTransferCoefficient)+" W.m-2.K-1");
+			System.out.println("Fluid heat transfer coefficient :"+std.format(fluidTransferCoefficient)+" W.m-2.K-1");
+			System.out.println("Total heat transfer coefficient :"+std.format(totalTransferCoefficient)+" W.m-2.K-1");
+			
 			airNodeOutletDeltaT = enthalpyTransfered/(cpAir*airNodeMassFlow);
-
 		}
 
 
@@ -438,28 +449,25 @@ public class AircooledCondenser {
 		 * Computing based on the Thome-El Hajal-Calvini flow pattern method
 		 * Wolverine Tube, INC. - Ch.8.1 "Condensation inside Horizontal Tubes" - "Heat transfer model" pp.8.8-8.12
 		 * @return alpha
+		 * @throws Exception 
 		 */
-		private double computeFluidTransferCoefficient(){
+		private double computeFluidTransferCoefficient() throws Exception{
 
 			computeFlowPatternMapBoundaries();
 			FlowPattern pattern = findPattern();
 
 			switch(pattern){
-
 			case AnnularFlow:
 				theta = 0.0;
 				break;
-
 			case StratifiedFlow:
 				theta = thetaStrat;
 				break;
-
 			case StratifiedWavyFlow:
 				theta = thetaStrat*Math.pow((mWavy-fluidNodeMassFlow)/(mWavy-mStrat), 0.5); // eq. (8.1.30)
 				break;
-
 			default:
-				throw new RuntimeException("Flow pattern not defined. Do no know how to solve this case !!");
+				throw new Exception("Flow pattern not defined. Do no know how to solve this case !!");
 			}
 
 

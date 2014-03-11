@@ -1,6 +1,6 @@
 package com.aqylon.aircooledCondenser;
 
-import com.aqylon.aircooledCondenser.AircooledCondenser.HeatTransferLocalUnit;
+import com.aqylon.aircooledCondenser.AircooledCondenser.LocalHeatTransferUnit;
 import com.aqylon.thermodynamics.physics.ThState;
 
 /**
@@ -132,7 +132,7 @@ public class NumericalSolver {
 					int currentDeltaTNode = getDeltaTNode(iPipe, iPass, iNode);
 					int currentAirNode = getAirNode(iPipe, iPass, iNode);
 
-					HeatTransferLocalUnit currentTransferUnit = this.condenser.new HeatTransferLocalUnit(this.airTemperatures[currentAirNode], this.innerFluidStates[currentFluidNode]);
+					LocalHeatTransferUnit currentTransferUnit = this.condenser.new LocalHeatTransferUnit(this.airTemperatures[currentAirNode], this.innerFluidStates[currentFluidNode]);
 					currentTransferUnit.computeTransfer();
 					this.deltaT[currentDeltaTNode] = currentTransferUnit.getAirNodeOutletDeltaT();
 
@@ -159,7 +159,7 @@ public class NumericalSolver {
 	}
 
 
-	private ThState computeLocalEnergyBalance(int currentFluidNode, HeatTransferLocalUnit currentTransferUnit){
+	private ThState computeLocalEnergyBalance(int currentFluidNode, LocalHeatTransferUnit currentTransferUnit){
 
 		ThState currentState=this.innerFluidStates[currentFluidNode];  
 
