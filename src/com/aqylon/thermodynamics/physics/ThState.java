@@ -78,6 +78,7 @@ public class ThState{
 
 	public ThState(ThFluid fluid){
 		this.fluid = fluid;
+
 	}
 	
 	

@@ -27,8 +27,8 @@ public class HelloWorld {
 		AircooledCondenser condenseur =new AircooledCondenser(di, Do, Db, b, fs, L, W,ntf,np,nt,airTotalMassFlow, airInletTemperature);
 		
 		ThFluid fluid=ThFluid.Water;
-		ThState fluidInletState=new ThState(fluid);
-		fluidInletState=fluidInletState.create();
+		ThState fluidInletState = new ThState(fluid);
+		fluidInletState = fluidInletState.create();
 		fluidInletState.setQuality(0.8);
 		
 		ThState outlet=condenseur.computeOutlet(fluidInletState, 4);

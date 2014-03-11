@@ -36,7 +36,7 @@ public class NumericalSolver {
 	String typeEnergyBalance ; // energy terms to take into account in the energy balance in function computeStateOfNextFluidNode
 	boolean debugMode ; // to control if you want to get lots of physical properties in arrays for debug
 
-//	private Hashtable debugPhysicalProperties ; // lots of physical properties in arrays for debug
+	//	private Hashtable debugPhysicalProperties ; // lots of physical properties in arrays for debug
 
 	/**
 	 * Inlet state of the fluid
@@ -45,7 +45,7 @@ public class NumericalSolver {
 	private double fluidNodeMassFlow ;
 
 
-/*	*//**
+	/*	*//**
 	 * Grid to visualize computed properties with paraview
 	 *//*
 	private RectilinearGrid grid;*/
@@ -80,7 +80,7 @@ public class NumericalSolver {
 	}
 
 
-	public ThState[] computeOutletStateOfEachPipe(){
+	public ThState[] computeOutletStateOfEachPipe() throws Exception{
 
 		computeAllStatesWithConvergence();
 
@@ -94,7 +94,7 @@ public class NumericalSolver {
 	}
 
 
-	public void computeAllStatesWithConvergence(){
+	public void computeAllStatesWithConvergence() throws Exception{
 
 		boolean converged=false ;
 
@@ -106,9 +106,9 @@ public class NumericalSolver {
 			converged=true ;                     
 			for(int iAirFlow=0 ; iAirFlow<N ; iAirFlow ++){
 				for(int iNode=0 ; iNode < nf ; iNode++){
-					int currentAirNode=getAirFlowNode(iAirFlow,iNode);
-					int nextAirNode=getAirFlowNode(iAirFlow,iNode+1);
-					int currentDeltaTNode=getAirFlowDeltaTNode(iAirFlow,iNode);
+					int currentAirNode = getAirFlowNode(iAirFlow,iNode);
+					int nextAirNode = getAirFlowNode(iAirFlow,iNode+1);
+					int currentDeltaTNode = getAirFlowDeltaTNode(iAirFlow,iNode);
 
 					double deltaTError=(airTemperatures[nextAirNode]-airTemperatures[currentAirNode]-deltaT[currentDeltaTNode])/airTemperatures[currentAirNode];
 					if(Math.abs(deltaTError)>1E-4){
@@ -122,7 +122,7 @@ public class NumericalSolver {
 	}
 
 
-	private void computeAllInnerStatesAlongPipes(){
+	private void computeAllInnerStatesAlongPipes() throws Exception{
 
 		for(int iPipe=0; iPipe < nPipe; iPipe++){
 			for(int iPass=0 ; iPass < nPass ; iPass++ ){

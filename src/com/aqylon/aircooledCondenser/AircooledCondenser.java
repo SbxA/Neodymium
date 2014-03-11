@@ -12,12 +12,12 @@ import com.aqylon.thermodynamics.physics.ThState;
  *
  */
 public class AircooledCondenser {
-	
+
 	/**
 	 * Standard format 0.##
 	 */
 	public final static Format std = new DecimalFormat("0.##");
-	
+
 	/**
 	 * Gravity of Earth (m/s^2)
 	 */
@@ -149,7 +149,7 @@ public class AircooledCondenser {
 	 * Total fluid mass flow arriving in the condenser
 	 */
 	private double fluidTotalMassFlow; 
-	
+
 	/**
 	 * Fluid mass flow in one tube
 	 */
@@ -210,8 +210,7 @@ public class AircooledCondenser {
 		airNodeMassFlow = this.airTotalMassFlow*(dx/this.L)*(this.W/nf);
 	}
 
-
-	public ThState computeOutlet(ThState fluidInletState, double fluidTotalMassFlow){
+	public ThState computeOutlet(ThState fluidInletState, double fluidTotalMassFlow) throws Exception{
 
 		this.fluidTotalMassFlow = fluidTotalMassFlow;
 		fluidNodeMassFlow = this.fluidTotalMassFlow/(nt*ntf);
@@ -221,10 +220,9 @@ public class AircooledCondenser {
 		ThState[] statesToMix = solver.computeOutletStateOfEachPipe();
 
 		ThState outletState = mixSeveralStates(statesToMix);
-		
+
 		return outletState;
 	}
-
 
 	private ThState mixSeveralStates(ThState[] statesToMix){
 
@@ -242,7 +240,6 @@ public class AircooledCondenser {
 
 		return mixedState ;
 	}
-
 
 	public void printFlowPatternMap(ThFluid fluid){
 		//compute the flow pattern map boundaries for several qualities. Useful to debug the flow pattern map.
@@ -269,7 +266,7 @@ public class AircooledCondenser {
 	}
 
 	/**
-	 * Compute the local diphasic heat exchanges based on the model developped in
+	 * Compute the local biphasic heat exchanges based on the model developped in
 	 * E. CAO - "Heat transfer in process engineering" - Ch.8 "Finned tubes" - Sec. 8-2-2 "Heat Transfer in Air Coolers" - pp.236-241
 	 */
 	public class LocalHeatTransferUnit {
@@ -404,7 +401,7 @@ public class AircooledCondenser {
 		public LocalHeatTransferUnit(double airNodeInletTemperature, ThState fluidNodeInletState){
 
 			this.fluidNodeInletState = fluidNodeInletState;
-			this.airNodeInletTemperature=airNodeInletTemperature;
+			this.airNodeInletTemperature = airNodeInletTemperature;
 
 			x = fluidNodeInletState.quality;
 			rhoL = fluidNodeInletState.saturatedLiquidState.density;
@@ -417,13 +414,12 @@ public class AircooledCondenser {
 			A=Math.PI*di*di;
 		}
 
-
 		public void computeTransfer() throws Exception{
 
 			airTransferCoefficient = computeAirTransferCoefficient();
 
 			// Start automatic computation
-			this.enthalpyTransfered = 1000; // In J, 1st hypothesis
+			this.enthalpyTransfered = 1000.0; // In J, 1st hypothesis
 			q=enthalpyTransfered/dA;
 			double enthalpyTransferedBuffer = 0.0;
 
@@ -434,11 +430,11 @@ public class AircooledCondenser {
 				enthalpyTransfered=totalTransferCoefficient*dA*(fluidNodeInletState.temperature-airNodeInletTemperature); // Chosen as positive in the fluid to air way.
 				q=enthalpyTransfered/dA;
 			}
-			
-			System.out.println("Air heat transfer coefficient :"+std.format(airTransferCoefficient)+" W.m-2.K-1");
-			System.out.println("Fluid heat transfer coefficient :"+std.format(fluidTransferCoefficient)+" W.m-2.K-1");
-			System.out.println("Total heat transfer coefficient :"+std.format(totalTransferCoefficient)+" W.m-2.K-1");
-			
+
+			System.out.println("Air heat transfer coefficient : "+std.format(airTransferCoefficient)+" W.m-2.K-1");
+			System.out.println("Fluid heat transfer coefficient : "+std.format(fluidTransferCoefficient)+" W.m-2.K-1");
+			System.out.println("Total heat transfer coefficient : "+std.format(totalTransferCoefficient)+" W.m-2.K-1");
+
 			airNodeOutletDeltaT = enthalpyTransfered/(cpAir*airNodeMassFlow);
 		}
 
@@ -453,8 +449,11 @@ public class AircooledCondenser {
 		 */
 		private double computeFluidTransferCoefficient() throws Exception{
 
-			computeFlowPatternMapBoundaries();
-			FlowPattern pattern = findPattern();
+			this.epsilon=computeEpsilon(x);
+			this.thetaStrat=computeThetaStrat(epsilon);
+			this.AL = (1-epsilon)*A;
+			
+			FlowPattern pattern = getPattern();
 
 			switch(pattern){
 			case AnnularFlow:
@@ -502,7 +501,16 @@ public class AircooledCondenser {
 
 			alpha = (alphaF*theta+(2*Math.PI-theta)*alphaC)/2*Math.PI; // eq. (8.1.23)
 
-			return alpha;
+			System.out.println("Epsilon : "+std.format(epsilon));
+			System.out.println("Thetastrat : "+std.format(Math.toDegrees(airTransferCoefficient))+"°");
+			System.out.println("Pattern : "+pattern);
+			System.out.println("ReL : "+std.format(ReL));
+			System.out.println("PrL : "+std.format(PrL));
+			System.out.println("AlphaC : "+std.format(alphaC)+" W.m-2.K-1");
+			System.out.println("AlphaF : "+std.format(alphaF)+" W.m-2.K-1");
+			System.out.println("Alpha : "+std.format(alpha)+" W.m-2.K-1\n\n");
+			
+			return alpha;	
 		}
 
 
@@ -536,65 +544,45 @@ public class AircooledCondenser {
 		}
 
 
-		private FlowPattern findPattern(){
+		private FlowPattern getPattern() throws Exception{
 
 			double fluidNodeMassVelocity = 4*fluidNodeMassFlow/(Math.PI*di*di);
+			computeFlowPatternMapBoundaries();
 
-			if(fluidNodeMassVelocity<mStrat || x==0 ){
-				return FlowPattern.StratifiedFlow;
-
-			}
-			else if(fluidNodeMassVelocity>mStrat && fluidNodeMassVelocity<mWavy){
-				return FlowPattern.StratifiedWavyFlow;
-
-			}
-			else if(fluidNodeMassVelocity>mWavy){
-				return FlowPattern.AnnularFlow;
-			}
-			else{
-				throw new RuntimeException("Flow pattern can not be defined.");
-			}
+			if(fluidNodeMassVelocity<mStrat || x==0 ) return FlowPattern.StratifiedFlow;
+			else if(fluidNodeMassVelocity>mStrat && fluidNodeMassVelocity<mWavy) return FlowPattern.StratifiedWavyFlow;
+			else if(fluidNodeMassVelocity>mWavy) return FlowPattern.AnnularFlow;
+			else throw new Exception("Flow pattern can not be defined.");
 		}
 
 		private void computeFlowPatternMapBoundaries(){
-
-			this.epsilon=computeEpsilon(x);
-
-			this.thetaStrat=computeThetaStrat(epsilon);
-
-			this.AL = (1-epsilon)*A;
 
 			// Determine the local flow pattern using Thome-El Hajal map
 			// Boundary between annular/intermittent & stratified-wavy flow
 			double x_mWavyMin = get_x_mWavyMin();
 
-			if(x<x_mWavyMin){
-				mWavy = mWavy(x);
-			}
-			else{
-				mWavy = mWavy(x_mWavyMin);
-			}
-
+			if(x<x_mWavyMin) mWavy = mWavy(x);
+			else mWavy = mWavy(x_mWavyMin);
 
 			// Boundary between stratified-wavy & fully-stratified flow
 			double AGd, ALd;
 			AGd = A*epsilon/(di*di); // eq. (12.4.21)
 			ALd = A*(1-epsilon)/(di*di); // eq. (12.4.20)
 			mStrat = Math.pow(266.3*266.3*ALd*AGd*AGd*rhoG*(rhoL-rhoG)*muL*g/(x*x*(1-x)*Math.pow(Math.PI, 3)), 1/3)+20*x; // eq. (12.4.17)
-
 		}
 
 		private double computeEpsilon(double x){
 			// Determine epsilon - void fraction
-			if(x==0){
-				return 0;
-			}
-			if(x==1){
-				return 1;
-			}
+			if(x==0.0) return 0.0;
+			if(x==1.0) return 1.0;
+			
 			double epsilonH, epsilonR;
-			epsilonH = 1/(1+rhoG*((1-x)/x)/rhoL); // eq. (8.1.28)
-			epsilonR = (x/rhoG)*1/((1+0.12*(1-x))*((x/rhoG)+(1-x)/rhoL)+(1.18*(1-x)*Math.pow(g*sigma*(rhoL-rhoG),0.25)/(fluidNodeMassFlow*Math.pow(rhoL, 0.5)))); // eq. (8.1.29)
+			epsilonH = 1.0/(1+rhoG*((1.0-x)/x)/rhoL); // eq. (8.1.28)
+			epsilonR = (x/rhoG)*1/((1.0+0.12*(1-x))*((x/rhoG)+(1.0-x)/rhoL)+(1.18*(1-x)*Math.pow(g*sigma*(rhoL-rhoG),0.25)/(fluidNodeMassFlow*Math.pow(rhoL, 0.5)))); // eq. (8.1.29)
+			
+			System.out.println("epsilonH : "+std.format(epsilonH));
+			System.out.println("epsilonR : "+std.format(epsilonR));
+
 			return (epsilonH-epsilonR)/Math.log(epsilonH/epsilonR); // eq. (8.1.27)
 		}
 
@@ -614,16 +602,13 @@ public class AircooledCondenser {
 				x=0.01; //I changed the value of x because I had troubles with infinite values for x=0. 
 			}
 
-			/**
-			 * Heat flux of departure from nucleate boiling
-			 */
-			double qDNB;
+			double qDNB; // Heat flux of departure from nucleate boiling
 
 			double WeOnFrL, F1, F2, AGd;
-			double epsilonLocal=computeEpsilon(x);
-			double thetaStratLocal=computeThetaStrat(epsilonLocal);
+			double epsilonLocal = computeEpsilon(x);
+			double thetaStratLocal = computeThetaStrat(epsilonLocal);
 
-			double hLdLocal =computeHld( thetaStratLocal);
+			double hLdLocal = computeHld( thetaStratLocal);
 			AGd = A*epsilonLocal/(di*di); // eq. (12.4.21)
 			WeOnFrL = g*di*di*rhoL/sigma; //eq. (12.4.6)
 
@@ -685,6 +670,5 @@ public class AircooledCondenser {
     }*/
 
 	}
-
 
 }
