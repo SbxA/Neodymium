@@ -22,6 +22,8 @@ public class AircooledCondenser {
 	 * Gravity of Earth (m/s^2)
 	 */
 	public final static double g = 9.81;
+	
+	
 
 	/*
 	 * Parameters as shown in Fig.8.8
