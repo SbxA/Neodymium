@@ -490,10 +490,14 @@ public class AircooledCondenser {
 
 		
 			if (pattern==FlowPattern.StratifiedFlow){
+<<<<<<< HEAD
 				fi = 1+Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25)*(fluidNodeMassFlow/mStrat); // eq. (8.1.41)
 			}
 			else{
 				fi = 1+Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25); // eq. (8.1.40)
+=======
+				fi = fi*(fluidNodeMassFlow/mStrat); // eq. (8.1.41) //FIXME to check
+>>>>>>> branch 'master' of https://github.com/Aqylon/Neodymium.git
 			}
 
 			ReL = 4*fluidNodeMassFlow*(1-x)*delta/((1-epsilon)*muL); // eq. (8.1.33)
