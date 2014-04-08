@@ -413,7 +413,7 @@ public class AircooledCondenser {
 			kL = fluidNodeInletState.saturatedLiquidState.thermalConductivity;
 			sigma = fluidNodeInletState.saturatedLiquidState.surfaceTension;
 
-			A=Math.PI*di*di;
+			A=Math.PI*di*di/4;
 		}
 
 		public void computeTransfer() throws Exception{
@@ -479,7 +479,7 @@ public class AircooledCondenser {
 
 
 			if(epsilon>0.5){
-				delta=(di-Math.sqrt(di*di-8*AL/(2*Math.PI-theta)))/2; //modification of equation 8.1.35 to make it homogeneous. TODO : check the new formula
+				delta=(di-Math.sqrt(di*di-8*AL/(2*Math.PI-theta)))/2; //modification of equation 8.1.35 to make it homogeneous. TODO : check the new formula //FIXME ask LC
 
 				//quadraticEquation eq8135 = new quadraticEquation(4.0, -4*di*di, 8*AL/(2*Math.PI-theta)+Math.pow(di, 4)-di*di); 
 				//delta = eq8135.solution; // eq. (8.1.35)
@@ -491,17 +491,17 @@ public class AircooledCondenser {
 			fi = 1+Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25); // eq. (8.1.40)
 
 			if (pattern==FlowPattern.StratifiedFlow){
-				fi = fi*(fluidNodeMassFlow/mStrat); // eq. (8.1.41)
+				fi = fi*(fluidNodeMassFlow/mStrat); // eq. (8.1.41) //FIXME to check
 			}
 
 			ReL = 4*fluidNodeMassFlow*(1-x)*delta/((1-epsilon)*muL); // eq. (8.1.33)
 			PrL = cpL*muL/kL; // eq. (8.1.34)
 
-			alphaC = 0.003*Math.pow(ReL, 0.74)*Math.pow(PrL, 0.5)*kL*fi/delta; // eq. (8.1.32)
+			alphaC = 0.003*Math.pow(ReL, 0.74)*Math.pow(PrL, 0.5)*kL*fi/delta; // eq. (8.1.32) 
 
-			alphaF = 0.655*Math.pow(rhoL*(rhoL-rhoG)*g*hLd*Math.pow(kL, 3)/(muL*di*q), 1/3); // eq. (8.1.43)
+			alphaF = 0.655*Math.pow(rhoL*(rhoL-rhoG)*g*hLd*Math.pow(kL, 3)/(muL*di*q), 1/3); // eq. (8.1.43) //FIXME to check hLd au lieu de HLg ?
 
-			alpha = (alphaF*theta+(2*Math.PI-theta)*alphaC)/2*Math.PI; // eq. (8.1.23)
+			alpha = (alphaF*theta+(2*Math.PI-theta)*alphaC)/(2*Math.PI); // eq. (8.1.23)
 
 			System.out.println("Epsilon : "+std.format(epsilon));
 			System.out.println("Thetastrat : "+std.format(Math.toDegrees(airTransferCoefficient))+"°");
@@ -530,7 +530,7 @@ public class AircooledCondenser {
 			double projectedPermimeter = 2*(Db-Do)*Nm+2*(1-b*Nm); // eq. (8-2-15)
 			double De = 2*(Af+Ad)/(Math.PI*projectedPermimeter); // eq. (8-2-14)
 			double Res = De*airTotalMassFlow/(as*muAir); // eq. (8-2-16)
-			hf = 0.0959*Math.pow(Res, 0.718)*kAir/(De*Math.pow(PrAir, 1/3));
+			hf = 0.0959*Math.pow(Res, 0.718)*kAir/(De*Math.pow(PrAir, -1/3));
 
 			// Computing hfp : heat transfer film coefficient for the air side corrected for external fouling
 			hfp = 1/((1/hf)+Rfo); // eq. (8-2-9)
@@ -539,7 +539,7 @@ public class AircooledCondenser {
 			double m = Math.sqrt(2*hfp/(kFins*b));
 			double H = (Db-Do)/2;
 			double Y = (H+b/2)*(1+0.35*Math.log(Db/Do));
-			double omega = Math.tan(m*Y)/(m*Y); // fig. 8-10
+			double omega = Math.tanh(m*Y)/(m*Y); // fig. 8-10
 			hfop = (omega*Af+Ad)*hfp/Ao; // eq. (8-2-10)
 
 			return hfop;
