@@ -2,13 +2,13 @@ package com.aqylon.aircooledCondenser;
 
 import java.text.DecimalFormat;
 import java.text.Format;
-
 import com.aqylon.thermodynamics.physics.ThFluid;
 import com.aqylon.thermodynamics.physics.ThState;
 
 /**
  * 
  * @author Vincent Lamblot 
+ *
  *
  */
 public class AircooledCondenser {
@@ -436,7 +436,9 @@ public class AircooledCondenser {
 			System.out.println("Air heat transfer coefficient : "+std.format(airTransferCoefficient)+" W.m-2.K-1");
 			System.out.println("Fluid heat transfer coefficient : "+std.format(fluidTransferCoefficient)+" W.m-2.K-1");
 			System.out.println("Total heat transfer coefficient : "+std.format(totalTransferCoefficient)+" W.m-2.K-1");
-
+			System.out.println("Enthalpy transfered : "+std.format(enthalpyTransfered)+" J");
+			//System.out.println("q = enthalpyTransfered/dA  : "+std.format(q)+" J/m²");
+			
 			airNodeOutletDeltaT = enthalpyTransfered/(cpAir*airNodeMassFlow);
 		}
 
@@ -479,7 +481,7 @@ public class AircooledCondenser {
 
 
 			if(epsilon>0.5){
-				delta=(di-Math.sqrt(di*di-8*AL/(2*Math.PI-theta)))/2; //modification of equation 8.1.35 to make it homogeneous. TODO : check the new formula //FIXME ask LC
+				delta=(di-Math.sqrt((di*di-8*AL/(2*Math.PI-theta))))/2; //FIXME modification of equation 8.1.35 to make it homogeneous. TODO : check the new formula
 
 				//quadraticEquation eq8135 = new quadraticEquation(4.0, -4*di*di, 8*AL/(2*Math.PI-theta)+Math.pow(di, 4)-di*di); 
 				//delta = eq8135.solution; // eq. (8.1.35)
@@ -488,32 +490,31 @@ public class AircooledCondenser {
 				delta = di/2;
 			}
 
-		
-			if (pattern==FlowPattern.StratifiedFlow){
-				fi = 1+Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25)*(fluidNodeMassFlow/mStrat); // eq. (8.1.41)
-			}
-			else{
-				fi = 1+Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25); // eq. (8.1.40)
+			fi = 1+Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25); // eq. (8.1.40)
 
+			if (pattern==FlowPattern.StratifiedFlow){
+				fi = 1+(Math.pow(velocitiesRatio, 0.5)*Math.pow((rhoL-rhoG)*g*delta*delta/sigma, 0.25))*(fluidNodeMassFlow/mStrat); //FIXME eq. (8.1.41)
 			}
 
 			ReL = 4*fluidNodeMassFlow*(1-x)*delta/((1-epsilon)*muL); // eq. (8.1.33)
 			PrL = cpL*muL/kL; // eq. (8.1.34)
 
-			alphaC = 0.003*Math.pow(ReL, 0.74)*Math.pow(PrL, 0.5)*kL*fi/delta; // eq. (8.1.32) 
+			alphaC = 0.003*Math.pow(ReL, 0.74)*Math.pow(PrL, 0.5)*kL*fi/delta; // eq. (8.1.32)
 
-			alphaF = 0.655*Math.pow(rhoL*(rhoL-rhoG)*g*hLd*Math.pow(kL, 3)/(muL*di*q), 1/3); // eq. (8.1.43) //FIXME to check hLd au lieu de HLg ?
+			//double hLG=this.fluidNodeInletState.saturatedVaporState.enthalpy-this.fluidNodeInletState.saturatedLiquidState.enthalpy ;
+			alphaF = 0.655*Math.pow(rhoL*(rhoL-rhoG)*g*hLd*Math.pow(kL, 3)/(muL*di*q), 1/3); //FIXME hLd au lieu de hLG eq. (8.1.43)
 
 			alpha = (alphaF*theta+(2*Math.PI-theta)*alphaC)/(2*Math.PI); // eq. (8.1.23)
 
 			System.out.println("Epsilon : "+std.format(epsilon));
-			System.out.println("Thetastrat : "+std.format(Math.toDegrees(airTransferCoefficient))+"°");
+			System.out.println("Thetastrat : "+std.format(Math.toDegrees(thetaStrat))+"°");
 			System.out.println("Pattern : "+pattern);
 			System.out.println("ReL : "+std.format(ReL));
 			System.out.println("PrL : "+std.format(PrL));
 			System.out.println("AlphaC : "+std.format(alphaC)+" W.m-2.K-1");
 			System.out.println("AlphaF : "+std.format(alphaF)+" W.m-2.K-1");
 			System.out.println("Alpha : "+std.format(alpha)+" W.m-2.K-1\n\n");
+			System.out.println("Delta : "+std.format(delta*1000)+" mm\n\n");
 			
 			return alpha;	
 		}
@@ -535,7 +536,7 @@ public class AircooledCondenser {
 			double Res = De*airTotalMassFlow/(as*muAir); // eq. (8-2-16)
 			hf = 0.0959*Math.pow(Res, 0.718)*kAir/(De*Math.pow(PrAir, -1/3));
 
-			// Computing hfp : heat transfer film coefficient for the air side corrected for external fouling
+			// Computing hfp: heat transfer film coefficient for the air side corrected for external fouling
 			hfp = 1/((1/hf)+Rfo); // eq. (8-2-9)
 
 			// Computing hfop : heat transfer film coefficient for the air side corrected for external fouling and fin efficiency
