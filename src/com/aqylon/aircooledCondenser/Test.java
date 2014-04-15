@@ -30,10 +30,8 @@ public class Test {
         inletState.setQuality(0.8);
         
         LocalHeatTransferUnit unit = condenser.new LocalHeatTransferUnit(airInletTemperature, inletState);        
-    
         unit.computeTransfer();
 
-        
     }
 
 }

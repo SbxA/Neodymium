@@ -186,7 +186,8 @@ public class AircooledCondenser {
 	 * @param airTotalMassFlow air mass flow at inlet (kg/s)
 	 * @param airInletTemperature air temperature at inlet (K)
 	 */
-	public AircooledCondenser(double di, double Do, double Db, double b, double fs, double L, double W, int ntf, int np, int nt, double airTotalMassFlow, double airInletTemperature){
+	public AircooledCondenser(double di, double Do, double Db, double b, double fs, double L, double W, int ntf, int np, int nt, 
+			double airTotalMassFlow, double airInletTemperature){
 
 		this.di = di;
 		this.Do = Do;
@@ -199,9 +200,9 @@ public class AircooledCondenser {
 		this.airTotalMassFlow = airTotalMassFlow;  
 		this.airInletTemperature = airInletTemperature;
 
-		Ao = Math.PI*this.Do; 
-		Ad = Ao*(1-this.b*Nm); 
-		Af = Math.PI*2*Nm*(this.Db*this.Db-this.Do*this.Do)/4; 
+		this.Ao = Math.PI*this.Do; 
+		this.Ad = Ao*(1-this.b*Nm); 
+		this.Af = Math.PI*2*Nm*(this.Db*this.Db-this.Do*this.Do)/4; 
 
 		this.np = np; 
 		this.nt = nt;
@@ -279,13 +280,11 @@ public class AircooledCondenser {
 		private double airNodeInletTemperature ;
 		/**
 		 * Thermodynamical state of the fluid arriving in this node
-		 */
-		private ThState fluidNodeInletState;
+		 */		private ThState fluidNodeInletState;
 		/**
 		 * Computed temperature gain of air at this node due to heat exchange
 		 */
 		private double airNodeOutletDeltaT;
-
 
 		public double totalTransferCoefficient, enthalpyTransfered, fluidTransferCoefficient, airTransferCoefficient;
 
@@ -437,7 +436,7 @@ public class AircooledCondenser {
 			System.out.println("Fluid heat transfer coefficient : "+std.format(fluidTransferCoefficient)+" W.m-2.K-1");
 			System.out.println("Total heat transfer coefficient : "+std.format(totalTransferCoefficient)+" W.m-2.K-1");
 			System.out.println("Enthalpy transfered : "+std.format(enthalpyTransfered)+" J");
-			//System.out.println("q = enthalpyTransfered/dA  : "+std.format(q)+" J/m²");
+			System.out.println("q = enthalpyTransfered/dA  : "+std.format(q)+" J/m²");
 			
 			airNodeOutletDeltaT = enthalpyTransfered/(cpAir*airNodeMassFlow);
 		}
@@ -453,7 +452,7 @@ public class AircooledCondenser {
 		 */
 		private double computeFluidTransferCoefficient() throws Exception{
 
-			this.epsilon=computeEpsilon(x);
+			this.epsilon = computeEpsilon(x);
 			this.thetaStrat=computeThetaStrat(epsilon);
 			this.AL = (1-epsilon)*A;
 			
@@ -548,7 +547,6 @@ public class AircooledCondenser {
 
 			return hfop;
 		}
-
 
 		private FlowPattern getPattern() throws Exception{
 
